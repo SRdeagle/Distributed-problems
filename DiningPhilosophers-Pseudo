@@ -1,0 +1,54 @@
+// Dining philosophers problem using asynchonous message passing with mailboxes, no deadlocks
+// deadlocks prevented by making the graph of shared resources non cyclic,
+// with fork processes
+
+
+void philosopher() {
+    while (true) {
+        think();
+
+        if (id = 0) { // One philosopher reverses the order of taking, making the graph of shared resources non cyclic
+            mbx_send(leftFork, "take", id);
+            mbx_receive(msg);
+            mbx_send(rightFork, "take", id);
+            mbx_receive(msg);
+        } else {
+            mbx_send(rightFork, "take", id);
+            mbx_receive(msg);
+            mbx_send(leftFork, "take", id);
+            mbx_receive(msg);
+        }
+
+        eat();
+
+        mbx_send(leftFork, "release", id);
+        mbx_send(rightFork, "release", id);
+    }
+}
+
+void fork() {
+    bool taken = false;
+    int nextId = -1; // -1 meaning invalid - no one is requesting the fork
+    while (true) {
+        mbx_receive(msg)
+        if (taken) {
+            if (msg.type == "release") {
+                taken = false;
+                if (nextId != -1) {
+                    mbx_send(nextId, "taken");
+                    taken = true;
+                    nextId = -1;
+                }
+            } else if (msg.type == "take") {
+                nextId = msg.philosopherId;
+            }
+        } else {
+            if (msg.type == "take") {
+                taken = true;
+                mbx_send(msg.philosopherId, "taken");
+                nextId = -1;
+            } else {
+                // Invalid message
+            }
+        }
+}

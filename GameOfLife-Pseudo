@@ -1,0 +1,29 @@
+// Game of life with mailboxes on a simulated distributed system (symetric, no coordinator)
+
+void node() {
+    int currGeneration = 0;
+    List neighbors; // List of neighboring nodes (could have used a global matrix, this is easier to read)
+    bool alive = false;
+    int a[2] = {0, 0}; // Alive neighbors for pair and odd generations
+    int d[2] = {0, 0}; // Dead neighbors
+
+    while (true) {
+        for (neighbor : neighbors) {
+            mbx_send(neighbor, alive, currGeneration);
+        }
+
+        while(d[currGeneration] + a[currGeneration] < neighbors.size()) {
+            mbx_receive(msg); // Get messages, if some are ahead, store them for the next generation
+            if (msg.alive) {
+                a[msg.generation]++;
+            } else {
+                d[msg.generation]++;
+            }
+        }
+
+        alive = caluclateState(alive,a[currGeneration],d[currGeneration]);
+        a[currGeneration] = 0;
+        d[currGeneration] = 0;
+        currGeneration=(currGeneration+1)%2;
+    }
+}
