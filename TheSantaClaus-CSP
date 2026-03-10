@@ -1,0 +1,67 @@
+/*  
+Деда Мраз који живи на северном полу већи део свог времена проводи спавајући (The Santa Claus Problem). 
+Могу га пробудити или уколико се испред врата појаве свих 9 његових ирваса или 3 од укупно 10 патуљака.
+Када се Деда Мраз пробуди он ради једну од следећих ствари:
+Уколико га је пробудила група ирваса одмах се спрема и креће на пут да подели деци играчке. Када се врати са пута свим ирвасима даје награду. 
+Уколико га је пробудила група патуљака онда их он уводи у своју кућу, разговара са њима и на крају их испрати до излазних врата.
+Група ирваса треба да буде опслужена пре групе патуљака. 
+*/
+
+[santa::SANTA || (i:1..9)reindeer(i)::REINDEER || (i:1..10)elf(i)::ELF]
+
+SANTA:: [
+    Integer reindeerCount = 0
+    Integer elfCount = 0
+    Integer elf1 = -1
+    Integer elf2 = -1
+    Reward r
+
+    *[
+        (i:1..9)reindeerCount<8,reindeer(i)?ready() -> [reindeerCount:=reindeerCount+1]
+        []
+        (i:1..10)elfCount<2,elf(i)?ready() -> [elf1==-1 -> [elf1:=i; elfCount:=elfCount+1] [] elf1!=-1 -> [elf2:=i; elfCount:=elfCount+1]]
+        []
+        (i:1..9)reindeerCount=8,reindeer(i)?ready() -> [
+            (i:1..9)reindeer(i)!ready();
+            GET_READY;
+            DELIVER_PRESENTS;
+            (i:1..9)reindeer(i)!reward(r);
+            reindeerCount:=0;
+        ]
+        []
+        (i:1..10)elfCount>=2 and reindeerCount<9,elf(i)?ready() -> [
+            elf(elf1)!enter();
+            elf(elf2)!enter();
+            elf(i)!enter();
+
+            TALK;
+            ESCORT;
+
+            elf(elf1)!exit();
+            elf(elf2)!exit();
+            elf(i)!exit();
+
+            elf1:=-1;
+            elf2:=-1;
+            elfCount:=0;
+
+        ]
+    ]
+]
+(i:1..9)REINDEER:: *[
+    santa!ready()
+    santa?ready() -> [
+
+        santa?reward(r) -> [
+            REWARD;
+        ]
+        
+    ]
+]
+(i:1..10)ELF:: *[
+    santa!ready()
+    santa?enter() -> [
+        TALK;
+        santa?exit()
+    ]
+]
