@@ -1,0 +1,42 @@
+[(i:1..M)factorial(i)::FACT || initiator::INIT]
+
+INIT:: [
+    GET_NUMBER,
+    factorial(1)!f(N)
+    factorial(1)?SOLUTION
+]
+
+FACT(1):: [
+    Integer N, Integer SOLUTION
+    *[
+        initiator?f(N) -> [
+            N == 1 -> [
+                initiator!1
+            ]
+            []
+            N > 1 -> [
+                factorial(2)!f(N-1)
+                factorial(2)?s(SOLUTION)
+                initiator!s(SOLUTION*N)
+            ]
+        ]
+    ]
+    
+]
+
+(i:2..M)FACT(i):: [
+    Integer N, Integer SOLUTION
+    *[
+        factorial(i-1)?f(N) -> [
+            N == 1 -> [
+                factorial(i-1)!s(1)
+            ]
+            []
+            N > 1 -> [
+                factorial(i+1)!f(N-1)
+                factorial(i+1)?s(SOLUTION)
+                factorial(i-1)!s(SOLUTION*N)
+            ]
+        ]
+    ]
+]

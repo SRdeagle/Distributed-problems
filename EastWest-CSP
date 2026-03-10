@@ -1,0 +1,32 @@
+// Process X recieves messages form process West, and sends them to process East, while sending "**" as "^"
+// simple program for understanding basic CSP syntax
+
+[X::method, east::EAST, west::WEST]
+
+method:: [
+    Character msg, Boolean asterisk=0
+    west?msg -> [
+        asterisk and msg == "*" -> [
+            msg = "^";
+            asterisk = false;
+            east!msg
+        ]   
+        []
+        !asterisk and msg == "*" -> [
+            asterisk = true;
+        ]
+        []
+        msg != "*" -> [
+            asterisk -> [
+                east!"*";
+                east!msg;
+                asterisk = false
+            ]
+            []
+            !asterisk -> [
+                east!msg
+            ]
+        ]
+        
+    ]
+]

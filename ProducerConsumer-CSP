@@ -1,0 +1,33 @@
+[producer(i:1..N)::PRODUCE || consumer(j:1:M)::CONSUME || buffer::METHOD]
+
+PRODUCE:: [
+    MAKEITEM(item)
+    buffer!item
+]
+
+
+CONSUME:: [
+    buffer!"get"
+    buffer?item-> [
+        USEITEM(item)
+    ]
+]
+
+
+METHOD:: [
+    Integer ri=0, Integer wi=0, Integer filled=0, Type(bufferSize) buff
+
+    true -> *[
+        (i:1..N)filled!=bufferSize,producer(i)?msg -> [
+            buff[wi] = msg,
+            wi = (wi+1) % bufferSize,
+            filled = wi-ri
+        ]
+        []
+        (i:1..M)filled>0,consumer(i)?msg -> [
+            consumer(i)!buff(ri),
+            ri = (ri+1) % bufferSize,
+            filled = wi-ri
+        ]
+    ]
+]
