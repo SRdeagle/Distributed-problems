@@ -1,0 +1,115 @@
+/*
+Постоји N процеса node(i:1..N) који или чувају елементе листе или су слободни. 
+Сваки од њих може да чува неку вредност (value) и показивач на следећи елемент у листи (next). 
+Процес head чува показивач на први елемент у листи. 
+Приликом брисања елемента из листе процес који га представља се пребацује на почетак листе слободних процеса на који указује процес free. 
+Процес start иницира брисање елемента са задатом вредношћу из листе. Реализовати процедуре за све наведене процесе користећи CSP.
+*/
+
+[(i:1..N)node(i)::NODE, head::HEAD, free::FREE, start::START]
+
+START:: [
+    Integer toDelete;
+    Integer deleted;
+    head!delete(toDelete);
+    (i:1..N)node(i)?deleted(deleted) -> [
+        deleted -> [/*successful deletion*/]
+        []
+        !deleted -> [/*unsuccessful deletion*/]
+    ]
+]
+
+HEAD:: [
+    Integer startNode;
+    Integer index;
+    Integer del;
+    *[
+        startNode>0, start?delete(index) -> [
+            node(startNode)!delete(index)
+        ]
+        []
+        startNode==0 -> [
+            start!deleted(false);
+        ]
+        []
+        startNode>0, node(startNode)?join(newStart) -> [
+            startNode = newStart;
+        ]
+
+    ]
+    
+]
+
+FREE:: [
+    Integer freeNode;
+    Integer index;
+    *[
+        (i:1..N)node(i)?add() -> [
+            node(i)!join(freeNode);
+            node(i)?ok() -> [freeNode = i;]   
+        ]
+    ]
+]
+
+NODE:: [
+    Integer index = 1;
+    Integer value;
+    Integer next;
+    Integer prevIndex;
+    Integer toDelete;
+    Integer newNext
+    Boolean occupied;
+    true -> [
+        occupied,start?delete(toDelete,prevIndex) -> [
+            index == toDelete -> [
+                head!join(next);
+                occupied = false;
+                free!add(i);
+                free?join(newNext) -> [next = newNext; free!ok();]
+                start!deleted(true);
+            ]
+            []
+            index <> toDelete -> [
+                node(next)!delete(toDelete,index);
+            ]
+        ]
+        []
+        (i:1..N)occupied,node(i)?join(nextIndex) -> [
+            next = nextIndex;
+        ]
+        []
+        
+
+    ]
+]
+
+(i:2..N)NODE:: [
+    Integer index = i;
+    Integer value;
+    Integer next;
+    Integer prevIndex;
+    Integer toDelete;
+    Integer newNext
+    Boolean occupied;
+    true -> [
+        (j:1..N)occupied,node(j)?delete(toDelete,prevIndex) -> [
+            index == toDelete -> [
+                node(prevIndex)!join(next);
+                occupied = false;
+                free!add(i);
+                free?join(newNext) -> [next = newNext; free!ok();]
+                start!deleted(true);
+            ]
+            []
+            index <> toDelete -> [
+                next>0 ->[node(next)!delete(toDelete,index);]
+                []
+                next<=0 -> [start!deleted(false);]
+            ]
+        ]
+        []
+        (j:1..N)occupied,node(j)?join(nextIndex) -> [
+            next = nextIndex;
+        ]
+    ]
+]

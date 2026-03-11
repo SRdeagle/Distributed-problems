@@ -1,0 +1,67 @@
+/*
+У Линди реализовати лицитацију у којој постоји један процес vođa_licitacije и n процеса učesnika_u_licitaciji и један процес tick који само ажурира време. 
+Вођа лицитације треба да иницијализује торку са почетном вредношћу и да после датог временског интервала заврши лицитацију, 
+успешно ако је излицитирана вредност већа од резервисане вредности, неуспешно иначе. 
+Процеси учесници у лицитацији треба да се реализују тако да се не блокирају када се заврши дата лицитација, 
+треба да знају која је излицитирана вредност и да ли су је они поставили.
+*/
+
+void licitator(int startValue) {
+    int time=0;
+    while (true) {
+        rd("tick",?time);
+        int currBest = startValue;
+        int newValue;
+        out("value", startValue);
+
+        while (rd("tick",time)) {
+            int newValue;
+            if (inp("offer", ?newValue)) {
+                if (newValue > currBest) {
+                    currBest = newValue;
+                }
+            }
+        }
+        while (inp("offer", ?newValue)) {
+                if (newValue > currBest) {
+                    currBest = newValue;
+                }
+        }
+        in("value", startValue);
+        out("winner", time, currBest)
+
+
+    }
+}
+
+void tick(int time_interval) {
+    int x=0;
+    out("tick", x);
+    while (true) {
+
+        sleep(time_interval);
+        in("tick", x);
+        rd("winner", x);
+        x++;
+        out("tick", x);
+    }
+}
+
+void participant() {
+    int time;
+    int initialValue;
+    int winner;
+    while (true) {
+        rd("value", ?initialValue);
+        rd("tick", ?time);
+        int offer = initialValue + random(initialValue*0.1,initialValue);
+        out("offer", time, offer);
+        rd("winner", time, ?winner);
+        if (offer == winner) {
+            // participant wins
+        } else {
+            // participant loses
+        }   
+    }
+    
+}
