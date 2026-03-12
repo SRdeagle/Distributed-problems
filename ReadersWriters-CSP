@@ -1,0 +1,62 @@
+/*
+    Readers writers, with exclusive writing and shared reading, implemented using CSP, writers preferred
+*/
+
+[(i:1..N)reader(i)::READER, (j:1..M)writer(j)::WRITER, resource::RESOURCE]
+
+RESOURCE:: [
+    Boolean writing = false;
+    Integer wantsToWrite = -1;
+    Integer reading = 0;
+    
+    true -> *[
+        (j:1..M)writing == false and reading == 0,writer(j)?write() -> [
+            writing = true;
+            writer(j)!okToWrite();
+            wantsToWrite = -1;
+        ]
+        (j:1..M)writing == true or reading <> 0,writer(j)?write() -> [
+            wantsToWrite = j;
+        ]
+        []
+        (j:1..M)writer(j)?end() -> [
+            wantsToWrite <> -1 -> writer(wantsToWrite)!OkToWrite
+            []
+            wantsToWrite == -1 -> writing = false;
+            
+        ]
+        []
+        (i:1..N)reading>0 or writing == false, reader(i)?read() -> [
+            reading++;
+        ]
+        []
+        (i:1..N)reader(i)?end() -> [
+            reading == 1 -> [
+                wantsToWrite <> -1 -> [writer(wantsToWrite)!OkToWrite; writing = true; reading = 0;]
+                []
+                wantsToWrite == -1 -> reading = 0;
+            ]
+            []
+            reading > 1 -> [
+                reading--;
+            ]
+        ]
+    ]
+]
+
+READER:: *[
+    resource!read() -> [
+        READ;
+        resource!end();
+    ]
+]
+
+WRITER:: *[
+    resource!write() -> [
+        resource?okToWrite() -> [
+            WRITE;
+            resource!end();
+        ]
+    ]
+    END;
+]
